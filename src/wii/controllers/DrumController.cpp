@@ -51,39 +51,39 @@ uint8_t DrumController_Shared::joyY() const {
 	return getControlData(Maps::JoyY);
 }
 
-boolean DrumController_Shared::drumRed() const {
+bool DrumController_Shared::drumRed() const {
 	return getControlBit(Maps::DrumRed);
 }
 
-boolean DrumController_Shared::drumBlue() const {
+bool DrumController_Shared::drumBlue() const {
 	return getControlBit(Maps::DrumBlue);
 }
 
-boolean DrumController_Shared::drumGreen() const {
+bool DrumController_Shared::drumGreen() const {
 	return getControlBit(Maps::DrumGreen);
 }
 
-boolean DrumController_Shared::cymbalYellow() const {
+bool DrumController_Shared::cymbalYellow() const {
 	return getControlBit(Maps::CymbalYellow);
 }
 
-boolean DrumController_Shared::cymbalOrange() const {
+bool DrumController_Shared::cymbalOrange() const {
 	return getControlBit(Maps::CymbalOrange);
 }
 
-boolean DrumController_Shared::bassPedal() const {
+bool DrumController_Shared::bassPedal() const {
 	return getControlBit(Maps::Pedal);
 }
 
-boolean DrumController_Shared::buttonPlus() const {
+bool DrumController_Shared::buttonPlus() const {
 	return getControlBit(Maps::ButtonPlus);
 }
 
-boolean DrumController_Shared::buttonMinus() const {
+bool DrumController_Shared::buttonMinus() const {
 	return getControlBit(Maps::ButtonMinus);
 }
 
-boolean DrumController_Shared::velocityAvailable() const {
+bool DrumController_Shared::velocityAvailable() const {
 	return getControlBit(Maps::VelocityAvailable);
 }
 
@@ -97,7 +97,7 @@ DrumController_Shared::VelocityID DrumController_Shared::velocityID() const {
 	return VelocityID::None;
 }
 
-boolean DrumController_Shared::validVelocityID(uint8_t idIn) const {
+bool DrumController_Shared::validVelocityID(uint8_t idIn) const {
 	switch (idIn) {
 		case(VelocityID::None):  // Intentionally fall through cases
 		case(VelocityID::Red):

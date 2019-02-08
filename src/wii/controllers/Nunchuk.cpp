@@ -59,11 +59,11 @@ uint16_t Nunchuk_Shared::accelZ() const {
 	return (getControlData(Maps::AccelZ_MSB) << 2) | getControlData(Maps::AccelZ_LSB);
 }
 
-boolean Nunchuk_Shared::buttonC() const {
+bool Nunchuk_Shared::buttonC() const {
 	return getControlBit(Maps::ButtonC);
 }
 
-boolean Nunchuk_Shared::buttonZ() const {
+bool Nunchuk_Shared::buttonZ() const {
 	return getControlBit(Maps::ButtonZ);
 }
 

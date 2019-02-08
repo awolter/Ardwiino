@@ -70,37 +70,37 @@ namespace NintendoExtensionCtrl {
 		uint8_t rightJoyX() const;  // 5 bits, 0-31
 		uint8_t rightJoyY() const;
 
-		boolean dpadUp() const;
-		boolean dpadDown() const;
-		boolean dpadLeft() const;
-		boolean dpadRight() const;
+		bool dpadUp() const;
+		bool dpadDown() const;
+		bool dpadLeft() const;
+		bool dpadRight() const;
 
-		boolean buttonA() const;
-		boolean buttonB() const;
-		boolean buttonX() const;
-		boolean buttonY() const;
+		bool buttonA() const;
+		bool buttonB() const;
+		bool buttonX() const;
+		bool buttonY() const;
 
 		uint8_t triggerL() const;  // 5 bits, 0-31
 		uint8_t triggerR() const;
 
-		boolean buttonL() const;
-		boolean buttonR() const;
+		bool buttonL() const;
+		bool buttonR() const;
 
-		boolean buttonZL() const;
-		boolean buttonZR() const;
+		bool buttonZL() const;
+		bool buttonZR() const;
 
-		boolean buttonStart() const;
-		boolean buttonSelect() const;
+		bool buttonStart() const;
+		bool buttonSelect() const;
 
-		boolean buttonPlus() const;
-		boolean buttonMinus() const;
+		bool buttonPlus() const;
+		bool buttonMinus() const;
 
-		boolean buttonHome() const;
+		bool buttonHome() const;
 
 	// NES Knockoff Support
 	public:
-		boolean isNESKnockoff() const;
-		boolean fixNESKnockoffData();
+		bool isNESKnockoff() const;
+		bool fixNESKnockoffData();
 
 	protected:
 		void manipulateKnockoffData();
@@ -110,8 +110,8 @@ namespace NintendoExtensionCtrl {
 	public:
 		using ClassicController_Shared::ClassicController_Shared;
 
-		boolean isKnockoff() const { return isNESKnockoff(); }
-		boolean fixKnockoffData() { return fixNESKnockoffData(); }
+		bool isKnockoff() const { return isNESKnockoff(); }
+		bool fixKnockoffData() { return fixNESKnockoffData(); }
 	};
 
 	class SNESMiniController_Shared : public ClassicController_Shared {

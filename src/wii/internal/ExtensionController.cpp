@@ -34,13 +34,13 @@ void ExtensionController::begin() {
 	 // Initialize the bus
 }
 
-boolean ExtensionController::connect() {
+bool ExtensionController::connect() {
 	disconnect();  // Clear current data
 	return reconnect();
 }
 
-boolean ExtensionController::reconnect() {
-	boolean success = false;
+bool ExtensionController::reconnect() {
+	bool success = false;
 
 	if (initialize()) {
 		identifyController();
@@ -67,7 +67,7 @@ void ExtensionController::identifyController() {
 	data.connectedType = NintendoExtensionCtrl::identifyController();  // Polls the controller for its identity
 }
 
-boolean ExtensionController::controllerIDMatches() const {
+bool ExtensionController::controllerIDMatches() const {
 	if (data.connectedType == id) {
 		return true;  // Match!
 	}
@@ -82,7 +82,7 @@ ExtensionType ExtensionController::getControllerType() const {
 	return data.connectedType;
 }
 
-boolean ExtensionController::update() {
+bool ExtensionController::update() {
 	if (controllerIDMatches() && requestControlData(requestSize, data.controlData)) {
 		return verifyData(data.controlData, requestSize);
 	}

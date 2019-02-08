@@ -23,40 +23,36 @@
 #ifndef NXC_Comms_h
 #define NXC_Comms_h
 
-#include "../../twi/I2Cdev.h"
 #include "NXC_Identity.h"
 #include <stdlib.h>
 
 namespace NintendoExtensionCtrl {
-const long I2C_ConversionDelay = 175; // Microseconds, ~200 on AVR
 const uint8_t I2C_Addr = 0x52;        // Address for all extension controllers
 
 const uint8_t ID_Size = 6;
-
+//TODO: get rid of all calls to this and cleanup anything that isnt required as a result.
 // Extension controller specific I2C functions
 // -------------------------------------------
 // Control Data
-inline boolean initialize() {
+inline bool initialize() {
   /* Initialization for unencrypted communication.
    * *Should* work on all devices, genuine + 3rd party.
    * See http://wiibrew.org/wiki/Wiimote/Extension_Controllers
    */
-  I2Cdev::TWIWriteRegister(I2C_Addr, 0xF0, 0x55);
-  I2Cdev::TWIWriteRegister(I2C_Addr, 0xFB, 0x00);
+  // I2Cdev::TWIWriteRegister(I2C_Addr, 0xF0, 0x55);
+  // I2Cdev::TWIWriteRegister(I2C_Addr, 0xFB, 0x00);
   return true;
 }
 
-inline boolean requestData(uint8_t ptr, size_t size, uint8_t *data) {
-  return I2Cdev::readBytes(I2C_Addr, ptr, size, data);
-}
-
-inline boolean requestControlData(size_t size, uint8_t *controlData) {
-  return I2Cdev::readBytes(I2C_Addr, 0x00, size, controlData);
+inline bool requestControlData(size_t size, uint8_t *controlData) {
+  return true;
+  // return I2Cdev::readBytes(I2C_Addr, 0x00, size, controlData);
 }
 
 // Identity
-inline boolean requestIdentity(uint8_t *idData) {
-  return I2Cdev::readBytes(I2C_Addr, 0xFA, ID_Size, idData);
+inline bool requestIdentity(uint8_t *idData) {
+  return true;
+  // return I2Cdev::readBytes(I2C_Addr, 0xFA, ID_Size, idData);
 }
 
 inline ExtensionType identifyController() {

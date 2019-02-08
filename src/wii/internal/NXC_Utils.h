@@ -27,7 +27,7 @@
 namespace NintendoExtensionCtrl {
 
 	// Utility
-	boolean verifyData(const uint8_t * dataIn, uint8_t dataSize);
+	bool verifyData(const uint8_t * dataIn, uint8_t dataSize);
 
 	class RolloverChange {
 	public:

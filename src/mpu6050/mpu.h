@@ -2,6 +2,7 @@
 #define MPU_H
 #include <stddef.h>
 #include <math.h>
+#include "../twi/I2Cdev.h"
 
 struct s_mympu {
 	float ypr[3];

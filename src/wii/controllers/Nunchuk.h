@@ -24,6 +24,7 @@
 #define NXC_Nunchuk_h
 
 #include "../internal/ExtensionController.h"
+#include "math.h"
 
 namespace NintendoExtensionCtrl {
 	class Nunchuk_Shared : public ExtensionController {
@@ -58,8 +59,8 @@ namespace NintendoExtensionCtrl {
 		uint16_t accelY() const;
 		uint16_t accelZ() const;
 
-		boolean buttonC() const;
-		boolean buttonZ() const;
+		bool buttonC() const;
+		bool buttonZ() const;
 
 		float rollAngle() const;  // -180.0 to 180.0
 		float pitchAngle() const;

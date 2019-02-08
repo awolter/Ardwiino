@@ -8,7 +8,6 @@
 
 class WiiExtension {
 public:
-  ExtensionPort port;
   Nunchuk::Shared nchuk;
   ClassicController::Shared classic;
   DJTurntableController::Shared dj;

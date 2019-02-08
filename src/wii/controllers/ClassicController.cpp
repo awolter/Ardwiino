@@ -68,35 +68,35 @@ uint8_t ClassicController_Shared::rightJoyY() const {
   return getControlData(Maps::RightJoyY);
 }
 
-boolean ClassicController_Shared::dpadUp() const {
+bool ClassicController_Shared::dpadUp() const {
   return getControlBit(Maps::DpadUp);
 }
 
-boolean ClassicController_Shared::dpadDown() const {
+bool ClassicController_Shared::dpadDown() const {
   return getControlBit(Maps::DpadDown);
 }
 
-boolean ClassicController_Shared::dpadLeft() const {
+bool ClassicController_Shared::dpadLeft() const {
   return getControlBit(Maps::DpadLeft);
 }
 
-boolean ClassicController_Shared::dpadRight() const {
+bool ClassicController_Shared::dpadRight() const {
   return getControlBit(Maps::DpadRight);
 }
 
-boolean ClassicController_Shared::buttonA() const {
+bool ClassicController_Shared::buttonA() const {
   return getControlBit(Maps::ButtonA);
 }
 
-boolean ClassicController_Shared::buttonB() const {
+bool ClassicController_Shared::buttonB() const {
   return getControlBit(Maps::ButtonB);
 }
 
-boolean ClassicController_Shared::buttonX() const {
+bool ClassicController_Shared::buttonX() const {
   return getControlBit(Maps::ButtonX);
 }
 
-boolean ClassicController_Shared::buttonY() const {
+bool ClassicController_Shared::buttonY() const {
   return getControlBit(Maps::ButtonY);
 }
 
@@ -108,35 +108,35 @@ uint8_t ClassicController_Shared::triggerR() const {
   return getControlData(Maps::TriggerR);
 }
 
-boolean ClassicController_Shared::buttonL() const {
+bool ClassicController_Shared::buttonL() const {
   return getControlBit(Maps::ButtonL);
 }
 
-boolean ClassicController_Shared::buttonR() const {
+bool ClassicController_Shared::buttonR() const {
   return getControlBit(Maps::ButtonR);
 }
 
-boolean ClassicController_Shared::buttonZL() const {
+bool ClassicController_Shared::buttonZL() const {
   return getControlBit(Maps::ButtonZL);
 }
 
-boolean ClassicController_Shared::buttonZR() const {
+bool ClassicController_Shared::buttonZR() const {
   return getControlBit(Maps::ButtonZR);
 }
 
-boolean ClassicController_Shared::buttonStart() const { return buttonPlus(); }
+bool ClassicController_Shared::buttonStart() const { return buttonPlus(); }
 
-boolean ClassicController_Shared::buttonSelect() const { return buttonMinus(); }
+bool ClassicController_Shared::buttonSelect() const { return buttonMinus(); }
 
-boolean ClassicController_Shared::buttonPlus() const {
+bool ClassicController_Shared::buttonPlus() const {
   return getControlBit(Maps::ButtonPlus);
 }
 
-boolean ClassicController_Shared::buttonMinus() const {
+bool ClassicController_Shared::buttonMinus() const {
   return getControlBit(Maps::ButtonMinus);
 }
 
-boolean ClassicController_Shared::buttonHome() const {
+bool ClassicController_Shared::buttonHome() const {
   return getControlBit(Maps::ButtonHome);
 }
 

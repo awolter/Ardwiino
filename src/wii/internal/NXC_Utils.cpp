@@ -24,9 +24,9 @@
 
 namespace NintendoExtensionCtrl {
 
-boolean verifyData(const uint8_t *dataIn, uint8_t dataSize) {
-  byte orCheck = 0x00;  // Check if data is zeroed (bad connection)
-  byte andCheck = 0xFF; // Check if data is maxed (bad init)
+bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
+  uint8_t orCheck = 0x00;  // Check if data is zeroed (bad connection)
+  uint8_t andCheck = 0xFF; // Check if data is maxed (bad init)
 
   for (int i = 0; i < dataSize; i++) {
     orCheck |= dataIn[i];

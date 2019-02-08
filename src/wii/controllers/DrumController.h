@@ -70,19 +70,19 @@ namespace NintendoExtensionCtrl {
 		uint8_t joyX() const;  // 6 bits, 0-63
 		uint8_t joyY() const;
 
-		boolean drumRed() const;
-		boolean drumBlue() const;
-		boolean drumGreen() const;
+		bool drumRed() const;
+		bool drumBlue() const;
+		bool drumGreen() const;
 
-		boolean cymbalYellow() const;
-		boolean cymbalOrange() const;
+		bool cymbalYellow() const;
+		bool cymbalOrange() const;
 
-		boolean bassPedal() const;
+		bool bassPedal() const;
 
-		boolean buttonPlus() const;
-		boolean buttonMinus() const;
+		bool buttonPlus() const;
+		bool buttonMinus() const;
 
-		boolean velocityAvailable() const;
+		bool velocityAvailable() const;
 		VelocityID velocityID() const;
 
 		uint8_t velocity() const;  // 3 bits, 0-7. 7 is fast/hard, 1 is slow/soft, 0 is not hit.
@@ -98,7 +98,7 @@ namespace NintendoExtensionCtrl {
 		void printDebug() const;
 
 	private:
-		boolean validVelocityID(uint8_t idIn) const;
+		bool validVelocityID(uint8_t idIn) const;
 	};
 }
 

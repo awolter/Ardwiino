@@ -11,16 +11,7 @@
 #define PI_2 1.57079632679489661923f
 
 struct s_mympu mympu;
-
-struct s_quat {
-  float w, x, y, z;
-};
-
-union u_quat {
-  struct s_quat _f;
-  long _l[4];
-} q;
-
+struct s_quat last;
 static int ret;
 static short sensors;
 static unsigned char fifoCount;
@@ -99,7 +90,7 @@ static inline float rad2deg(float rad) {
 static float test, sqy, sqz, sqw;
 static void quaternionToEuler(const struct s_quat *q, float *x, float *y,
                               float *z) {
-  sqy = q->y * q->y;
+  // sqy = q->y * q->y;
   sqz = q->z * q->z;
   sqw = q->w * q->w;
 
@@ -125,18 +116,16 @@ static inline float wrap_pi(float x) {
 }
 
 int mympu_update() {
-
-  ret = dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
-  if (ret != 0)
-    return ret;
-
-  q._f.w = (float)q._l[0] / (float)QUAT_SENS;
-  q._f.x = (float)q._l[1] / (float)QUAT_SENS;
-  q._f.y = (float)q._l[2] / (float)QUAT_SENS;
-  q._f.z = (float)q._l[3] / (float)QUAT_SENS;
-
-  quaternionToEuler(&q._f, &mympu.ypr[2], &mympu.ypr[1], &mympu.ypr[0]);
-  mympu.ypr[2] = wrap_pi(mympu.ypr[2]);
-
+  if (last.w == I2Cdev::accelData._f.w && last.x == I2Cdev::accelData._f.x &&
+      last.y == I2Cdev::accelData._f.y && last.z == I2Cdev::accelData._f.z) {
+  } else {
+    quaternionToEuler(&I2Cdev::accelData._f, &mympu.ypr[2], &mympu.ypr[1],
+                      &mympu.ypr[0]);
+    mympu.ypr[2] = wrap_pi(mympu.ypr[2]);
+  }
+  last.w = I2Cdev::accelData._f.w;
+  last.x = I2Cdev::accelData._f.x;
+  last.y = I2Cdev::accelData._f.y;
+  last.z = I2Cdev::accelData._f.z;
   return 0;
 }

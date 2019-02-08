@@ -22,7 +22,6 @@
 
 #ifndef NintendoExtensionCtrl_h
 #define NintendoExtensionCtrl_h
-
 // Controller Base
 #include "internal/ExtensionController.h"
 

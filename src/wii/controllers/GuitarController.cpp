@@ -50,35 +50,35 @@ uint8_t GuitarController_Shared::joyY() const {
 	return getControlData(Maps::JoyY);
 }
 
-boolean GuitarController_Shared::strum() const {
+bool GuitarController_Shared::strum() const {
 	return strumUp() | strumDown();
 }
 
-boolean GuitarController_Shared::strumUp() const {
+bool GuitarController_Shared::strumUp() const {
 	return getControlBit(Maps::StrumUp);
 }
 
-boolean GuitarController_Shared::strumDown() const {
+bool GuitarController_Shared::strumDown() const {
 	return getControlBit(Maps::StrumDown);
 }
 
-boolean GuitarController_Shared::fretGreen() const {
+bool GuitarController_Shared::fretGreen() const {
 	return getControlBit(Maps::FretGreen);
 }
 
-boolean GuitarController_Shared::fretRed() const {
+bool GuitarController_Shared::fretRed() const {
 	return getControlBit(Maps::FretRed);
 }
 
-boolean GuitarController_Shared::fretYellow() const {
+bool GuitarController_Shared::fretYellow() const {
 	return getControlBit(Maps::FretYellow);
 }
 
-boolean GuitarController_Shared::fretBlue() const {
+bool GuitarController_Shared::fretBlue() const {
 	return getControlBit(Maps::FretBlue);
 }
 
-boolean GuitarController_Shared::fretOrange() const {
+bool GuitarController_Shared::fretOrange() const {
 	return getControlBit(Maps::FretOrange);
 }
 
@@ -90,36 +90,36 @@ uint8_t GuitarController_Shared::touchbar() const {
 	return getControlData(Maps::Touchbar);
 }
 
-boolean GuitarController_Shared::touchGreen() const {
+bool GuitarController_Shared::touchGreen() const {
 	return touchbar() != 0 && touchbar() <= 7;
 }
 
-boolean GuitarController_Shared::touchRed() const {
+bool GuitarController_Shared::touchRed() const {
 	return touchbar() >= 7 && touchbar() <= 13;
 }
 
-boolean GuitarController_Shared::touchYellow() const {
+bool GuitarController_Shared::touchYellow() const {
 	return touchbar() >= 12 && touchbar() <= 21
 		&& touchbar() != 15;	// The "not touched" value
 }
 
-boolean GuitarController_Shared::touchBlue() const {
+bool GuitarController_Shared::touchBlue() const {
 	return touchbar() >= 20 && touchbar() <= 26;
 }
 
-boolean GuitarController_Shared::touchOrange() const {
+bool GuitarController_Shared::touchOrange() const {
 	return touchbar() >= 26;
 }
 
-boolean GuitarController_Shared::buttonPlus() const {
+bool GuitarController_Shared::buttonPlus() const {
 	return getControlBit(Maps::ButtonPlus);
 }
 
-boolean GuitarController_Shared::buttonMinus() const {
+bool GuitarController_Shared::buttonMinus() const {
 	return getControlBit(Maps::ButtonMinus);
 }
 
-boolean GuitarController_Shared::supportsTouchbar() {
+bool GuitarController_Shared::supportsTouchbar() {
 	if (touchbarData) {
 		return true;
 	}

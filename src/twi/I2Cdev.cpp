@@ -1,14 +1,162 @@
 #include "I2Cdev.h"
+#include "../mpu6050/inv_mpu.h"
+#include "../mpu6050/inv_mpu_dmp_motion_driver.h"
+#include "../wii/internal/NXC_Identity.h"
+#define BIT_FIFO_OVERFLOW (0x10)
 TWIInfoStruct I2Cdev::TWIInfo;
 int I2Cdev::RXBuffLen;
 int I2Cdev::TXBuffLen;
 int I2Cdev::RXBuffIndex;
+uint8_t I2Cdev::andCheck;
+uint8_t I2Cdev::orCheck;
 volatile int I2Cdev::TXBuffIndex;
 volatile uint8_t I2Cdev::TWIReceiveBuffer[RXMAXBUFLEN];
 uint8_t I2Cdev::TWITransmitBuffer[TXMAXBUFLEN];
+uint16_t I2Cdev::mpuCount;
+AccelDataUnion I2Cdev::accelData;
+int I2Cdev::pollDevice = 0;
+volatile bool I2Cdev::needsData;
+
+ExtensionPort I2Cdev::port;
 /** Default constructor.
  */
 I2Cdev::I2Cdev() {}
+void I2Cdev::startPolling() {
+  pollDevice = 1;
+  nextPollingReq();
+}
+void I2Cdev::nextPollingReq() {
+  if (pollDevice == 0)
+    return;
+  uint8_t addr;
+  uint8_t value;
+  uint8_t dev = WII_I2C_ADDR;
+  needsData = false;
+  switch (pollDevice) {
+  case 1:
+    addr = 0xFA;
+    needsData = true;
+    break;
+  case 2:
+    orCheck = 0x00;
+    andCheck = 0xFF;
+    addr = 0x00;
+    needsData = true;
+    break;
+  case 3:
+    addr = 0xF0;
+    value = 0x55;
+    break;
+  case 4:
+    addr = 0xFB;
+    value = 0x00;
+    break;
+  case 5:
+    dev = MPU_ADDR;
+    addr = 0x72;
+    needsData = true;
+    break;
+  case 6:
+    dev = MPU_ADDR;
+    addr = 0x3A;
+    needsData = true;
+    break;
+  case 7:
+    dev = MPU_ADDR;
+    addr = 0x74;
+    needsData = true;
+    break;
+  }
+  uint8_t msg[] = {(dev << 1) & 0xFE, addr, value};
+  TWITransmitData(msg, needsData ? 2 : 3, 0);
+}
+void I2Cdev::nextPollingData() {
+  _delay_us(200);
+  if (pollDevice == 0)
+    return;
+  if (needsData) {
+    needsData = false;
+    switch (pollDevice) {
+    case 1:
+      TWIReadData(WII_I2C_ADDR, WII_ID_SIZE, false);
+      break;
+    case 2:
+      TWIReadData(WII_I2C_ADDR, 6, false);
+      break;
+    case 5:
+      TWIReadData(MPU_ADDR, 2, false);
+      break;
+    case 6:
+      TWIReadData(MPU_ADDR, 1, false);
+      break;
+    case 7:
+      TWIReadData(MPU_ADDR, 16, false);
+      break;
+    }
+  } else {
+    switch (pollDevice) {
+    case 1:
+      port.data.connectedType =
+          NintendoExtensionCtrl::identifyController(TWIReceiveBuffer);
+      pollDevice = 2;
+      break;
+    case 2:
+      for (int i = 0; i < RXBuffLen; i++) {
+        port.data.controlData[i] = TWIReceiveBuffer[i];
+      }
+      if (orCheck == 0x00 || andCheck == 0xFF) {
+        pollDevice = 3;
+      } else {
+        pollDevice = 1;
+      }
+      break;
+    case 3:
+      pollDevice = 4;
+      break;
+    case 4:
+      pollDevice = 5;
+      break;
+    case 5:
+      mpuCount = TWIReceiveBuffer[0] << 8 | TWIReceiveBuffer[1];
+      if (mpuCount > 512) {
+        pollDevice = 6;
+      } else if (mpuCount > 16) {
+        pollDevice = 7;
+      } else {
+        pollDevice = 1;
+      }
+      break;
+    case 6:
+      if (TWIReceiveBuffer[0] & BIT_FIFO_OVERFLOW) {
+        mpu_reset_fifo();
+      }
+      pollDevice = 7;
+      break;
+    case 7:
+      accelData._l[0] = ((long)TWIReceiveBuffer[0] << 24) |
+                        ((long)TWIReceiveBuffer[1] << 16) |
+                        ((long)TWIReceiveBuffer[2] << 8) | TWIReceiveBuffer[3];
+      accelData._l[1] = ((long)TWIReceiveBuffer[4] << 24) |
+                        ((long)TWIReceiveBuffer[5] << 16) |
+                        ((long)TWIReceiveBuffer[6] << 8) | TWIReceiveBuffer[7];
+      accelData._l[2] = ((long)TWIReceiveBuffer[8] << 24) |
+                        ((long)TWIReceiveBuffer[9] << 16) |
+                        ((long)TWIReceiveBuffer[10] << 8) |
+                        TWIReceiveBuffer[11];
+      accelData._l[3] = ((long)TWIReceiveBuffer[12] << 24) |
+                        ((long)TWIReceiveBuffer[13] << 16) |
+                        ((long)TWIReceiveBuffer[14] << 8) |
+                        TWIReceiveBuffer[15];
+      accelData._f.w = (float)accelData._l[0] / (float)QUAT_SENS;
+      accelData._f.x = (float)accelData._l[1] / (float)QUAT_SENS;
+      accelData._f.y = (float)accelData._l[2] / (float)QUAT_SENS;
+      accelData._f.z = (float)accelData._l[3] / (float)QUAT_SENS;
+      pollDevice = 1;
+      break;
+    }
+    nextPollingReq();
+  }
+}
 void I2Cdev::TWIInit() {
   TWIInfo.mode = Ready;
   TWIInfo.errorCode = 0xFF;
@@ -19,6 +167,7 @@ void I2Cdev::TWIInit() {
   TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
   // Enable TWI and interrupt
   TWCR = (1 << TWIE) | (1 << TWEN);
+  // Serial.println("TWIInit");
 }
 
 uint8_t I2Cdev::isTWIReady() {
@@ -68,8 +217,8 @@ uint8_t I2Cdev::TWITransmitData(void *const TXdata, uint8_t dataLen,
     TXBuffLen = dataLen;
     TXBuffIndex = 0;
 
-    // If a repeated start has been sent, then devices are already listening for
-    // an address and another start does not need to be sent.
+    // If a repeated start has been sent, then devices are already listening
+    // for an address and another start does not need to be sent.
     if (TWIInfo.mode == RepeatedStartSent) {
       TWIInfo.mode = Initializing;
       TWDR = TWITransmitBuffer[TXBuffIndex++]; // Load data to transmit buffer
@@ -95,131 +244,16 @@ uint8_t I2Cdev::TWIReadData(uint8_t TWIaddr, uint8_t bytesToRead,
     RXBuffLen = bytesToRead;
     // Create the one value array for the address to be transmitted
     uint8_t TXdata[1];
-    // Shift the address and AND a 1 into the read write bit (set to write mode)
+    // Shift the address and AND a 1 into the read write bit (set to write
+    // mode)
     TXdata[0] = (TWIaddr << 1) | 0x01;
-    // Use the TWITransmitData function to initialize the transfer and address
-    // the slave
+    // Use the TWITransmitData function to initialize the transfer and
+    // address the slave
     TWITransmitData(TXdata, 1, repStart);
   } else {
     return 0;
   }
   return 1;
-}
-/** Read a single bit from an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to read from
- * @param bitNum Bit position to read (0-7)
- * @param data Container for single bit value
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
- * @return Status of read operation (true = success)
- */
-int8_t I2Cdev::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum,
-                       uint8_t *data, uint16_t timeout) {
-  uint8_t b;
-  uint8_t count = readByte(devAddr, regAddr, &b, timeout);
-  *data = b & (1 << bitNum);
-  return count;
-}
-
-/** Read a single bit from a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to read from
- * @param bitNum Bit position to read (0-15)
- * @param data Container for single bit value
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
- * @return Status of read operation (true = success)
- */
-int8_t I2Cdev::readBitW(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum,
-                        uint16_t *data, uint16_t timeout) {
-  uint16_t b;
-  uint8_t count = readWord(devAddr, regAddr, &b, timeout);
-  *data = b & (1 << bitNum);
-  return count;
-}
-
-/** Read multiple bits from an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to read from
- * @param bitStart First bit position to read (0-7)
- * @param length Number of bits to read (not more than 8)
- * @param data Container for right-aligned value (i.e. '101' read from any
- * bitStart position will equal 0x05)
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
- * @return Status of read operation (true = success)
- */
-int8_t I2Cdev::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart,
-                        uint8_t length, uint8_t *data, uint16_t timeout) {
-  // 01101001 read byte
-  // 76543210 bit numbers
-  //    xxx   args: bitStart=4, length=3
-  //    010   masked
-  //   -> 010 shifted
-  uint8_t count, b;
-  if ((count = readByte(devAddr, regAddr, &b, timeout)) != 0) {
-    uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-    b &= mask;
-    b >>= (bitStart - length + 1);
-    *data = b;
-  }
-  return count;
-}
-
-/** Read multiple bits from a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to read from
- * @param bitStart First bit position to read (0-15)
- * @param length Number of bits to read (not more than 16)
- * @param data Container for right-aligned value (i.e. '101' read from any
- * bitStart position will equal 0x05)
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
- * @return Status of read operation (1 = success, 0 = failure, -1 = timeout)
- */
-int8_t I2Cdev::readBitsW(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart,
-                         uint8_t length, uint16_t *data, uint16_t timeout) {
-  // 1101011001101001 read byte
-  // fedcba9876543210 bit numbers
-  //    xxx           args: bitStart=12, length=3
-  //    010           masked
-  //           -> 010 shifted
-  uint8_t count;
-  uint16_t w;
-  if ((count = readWord(devAddr, regAddr, &w, timeout)) != 0) {
-    uint16_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-    w &= mask;
-    w >>= (bitStart - length + 1);
-    *data = w;
-  }
-  return count;
-}
-
-/** Read single byte from an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to read from
- * @param data Container for byte value read from device
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
- * @return Status of read operation (true = success)
- */
-int8_t I2Cdev::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data,
-                        uint16_t timeout) {
-  return readBytes(devAddr, regAddr, 1, data, timeout);
-}
-
-/** Read single word from a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to read from
- * @param data Container for word value read from device
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
- * @return Status of read operation (true = success)
- */
-int8_t I2Cdev::readWord(uint8_t devAddr, uint8_t regAddr, uint16_t *data,
-                        uint16_t timeout) {
-  return readWords(devAddr, regAddr, 1, data, timeout);
 }
 
 /** Read multiple bytes from an 8-bit device register.
@@ -227,8 +261,8 @@ int8_t I2Cdev::readWord(uint8_t devAddr, uint8_t regAddr, uint16_t *data,
  * @param regAddr First register regAddr to read from
  * @param length Number of bytes to read
  * @param data Buffer to store read data in
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
+ * @param timeout Optional read timeout in milliseconds (0 to disable, leave
+ * off to use default class value in I2Cdev::readTimeout)
  * @return Number of bytes read (-1 indicates failure)
  */
 int8_t I2Cdev::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
@@ -238,134 +272,6 @@ int8_t I2Cdev::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
     data[i] = TWIReceiveBuffer[i];
   }
   return length;
-}
-
-/** Read multiple words from a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr First register regAddr to read from
- * @param length Number of words to read
- * @param data Buffer to store read data in
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off
- * to use default class value in I2Cdev::readTimeout)
- * @return Number of words read (-1 indicates failure)
- */
-int8_t I2Cdev::readWords(uint8_t devAddr, uint8_t regAddr, uint8_t length,
-                         uint16_t *data, uint16_t timeout) {
-  TWIReadRegister(devAddr, regAddr, length * 2);
-  for (int i = 0; i < length * 2; i += 2) {
-    data[i] = TWIReceiveBuffer[i] << 8 | TWIReceiveBuffer[i + 1];
-  }
-  return length;
-}
-
-/** write a single bit in an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to write to
- * @param bitNum Bit position to write (0-7)
- * @param value New bit value to write
- * @return Status of operation (true = success)
- */
-bool I2Cdev::writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum,
-                      uint8_t data) {
-  uint8_t b;
-  readByte(devAddr, regAddr, &b);
-  b = (data != 0) ? (b | (1 << bitNum)) : (b & ~(1 << bitNum));
-  return writeByte(devAddr, regAddr, b);
-}
-
-/** write a single bit in a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to write to
- * @param bitNum Bit position to write (0-15)
- * @param value New bit value to write
- * @return Status of operation (true = success)
- */
-bool I2Cdev::writeBitW(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum,
-                       uint16_t data) {
-  uint16_t w;
-  readWord(devAddr, regAddr, &w);
-  w = (data != 0) ? (w | (1 << bitNum)) : (w & ~(1 << bitNum));
-  return writeWord(devAddr, regAddr, w);
-}
-
-/** Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to write to
- * @param bitStart First bit position to write (0-7)
- * @param length Number of bits to write (not more than 8)
- * @param data Right-aligned value to write
- * @return Status of operation (true = success)
- */
-bool I2Cdev::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart,
-                       uint8_t length, uint8_t data) {
-  //      010 value to write
-  // 76543210 bit numbers
-  //    xxx   args: bitStart=4, length=3
-  // 00011100 mask byte
-  // 10101111 original value (sample)
-  // 10100011 original & ~mask
-  // 10101011 masked | value
-  uint8_t b;
-  if (readByte(devAddr, regAddr, &b) != 0) {
-    uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-    data <<= (bitStart - length + 1); // shift data into correct position
-    data &= mask;                     // zero all non-important bits in data
-    b &= ~(mask); // zero all important bits in existing byte
-    b |= data;    // combine data with existing byte
-    return writeByte(devAddr, regAddr, b);
-  } else {
-    return false;
-  }
-}
-
-/** Write multiple bits in a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to write to
- * @param bitStart First bit position to write (0-15)
- * @param length Number of bits to write (not more than 16)
- * @param data Right-aligned value to write
- * @return Status of operation (true = success)
- */
-bool I2Cdev::writeBitsW(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart,
-                        uint8_t length, uint16_t data) {
-  //              010 value to write
-  // fedcba9876543210 bit numbers
-  //    xxx           args: bitStart=12, length=3
-  // 0001110000000000 mask word
-  // 1010111110010110 original value (sample)
-  // 1010001110010110 original & ~mask
-  // 1010101110010110 masked | value
-  uint16_t w;
-  if (readWord(devAddr, regAddr, &w) != 0) {
-    uint16_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-    data <<= (bitStart - length + 1); // shift data into correct position
-    data &= mask;                     // zero all non-important bits in data
-    w &= ~(mask); // zero all important bits in existing word
-    w |= data;    // combine data with existing word
-    return writeWord(devAddr, regAddr, w);
-  } else {
-    return false;
-  }
-}
-
-/** Write single byte to an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register address to write to
- * @param data New byte value to write
- * @return Status of operation (true = success)
- */
-bool I2Cdev::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
-  return writeBytes(devAddr, regAddr, 1, &data);
-}
-
-/** Write single word to a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register address to write to
- * @param data New word value to write
- * @return Status of operation (true = success)
- */
-bool I2Cdev::writeWord(uint8_t devAddr, uint8_t regAddr, uint16_t data) {
-  return writeWords(devAddr, regAddr, 1, &data);
 }
 
 /** Write multiple bytes to an 8-bit device register.
@@ -380,18 +286,6 @@ bool I2Cdev::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
   return TWIWriteRegisterMultiple(devAddr, regAddr, data, length);
 }
 
-/** Write multiple words to a 16-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr First register address to write to
- * @param length Number of words to write
- * @param data Buffer to copy new data from
- * @return Status of operation (true = success)
- */
-bool I2Cdev::writeWords(uint8_t devAddr, uint8_t regAddr, uint8_t length,
-                        uint16_t *data) {
-  return TWIWriteRegisterMultiple(devAddr, regAddr, (uint8_t *)data,
-                                  length * 2);
-}
 void I2Cdev::interrupt() {
   switch (TWI_STATUS) {
   // ----\/ ---- MASTER TRANSMITTER OR WRITING ADDRESS ----\/ ----  //
@@ -416,6 +310,7 @@ void I2Cdev::interrupt() {
       TWIInfo.mode = Ready;
       TWIInfo.errorCode = 0xFF;
       TWISendStop();
+      nextPollingData();
     }
     break;
 
@@ -424,13 +319,14 @@ void I2Cdev::interrupt() {
   case TWI_MR_SLAR_ACK: // SLA+R has been transmitted, ACK has been received
     // Switch to Master Receiver mode
     TWIInfo.mode = MasterReceiver;
-    // If there is more than one byte to be read, receive data byte and return
-    // an ACK
+    // If there is more than one byte to be read, receive data byte and
+    // return an ACK
     if (RXBuffIndex < RXBuffLen - 1) {
       TWIInfo.errorCode = TWI_NO_RELEVANT_INFO;
       TWISendACK();
     }
-    // Otherwise when a data byte (the only data byte) is received, return NACK
+    // Otherwise when a data byte (the only data byte) is received, return
+    // NACK
     else {
       TWIInfo.errorCode = TWI_NO_RELEVANT_INFO;
       TWISendNACK();
@@ -441,13 +337,14 @@ void I2Cdev::interrupt() {
 
     /// -- HANDLE DATA BYTE --- ///
     TWIReceiveBuffer[RXBuffIndex++] = TWDR;
-    // If there is more than one byte to be read, receive data byte and return
-    // an ACK
+    // If there is more than one byte to be read, receive data byte and
+    // return an ACK
     if (RXBuffIndex < RXBuffLen - 1) {
       TWIInfo.errorCode = TWI_NO_RELEVANT_INFO;
       TWISendACK();
     }
-    // Otherwise when a data byte (the only data byte) is received, return NACK
+    // Otherwise when a data byte (the only data byte) is received, return
+    // NACK
     else {
       TWIInfo.errorCode = TWI_NO_RELEVANT_INFO;
       TWISendNACK();
@@ -459,6 +356,10 @@ void I2Cdev::interrupt() {
 
     /// -- HANDLE DATA BYTE --- ///
     TWIReceiveBuffer[RXBuffIndex++] = TWDR;
+    if (pollDevice == 2) {
+      orCheck |= TWIReceiveBuffer[RXBuffIndex - 1];
+      andCheck &= TWIReceiveBuffer[RXBuffIndex - 1];
+    }
     // This transmission is complete however do not release bus yet
     if (TWIInfo.repStart) {
       TWIInfo.errorCode = 0xFF;
@@ -469,6 +370,7 @@ void I2Cdev::interrupt() {
       TWIInfo.mode = Ready;
       TWIInfo.errorCode = 0xFF;
       TWISendStop();
+      nextPollingData();
     }
     break;
 
@@ -488,6 +390,7 @@ void I2Cdev::interrupt() {
       TWIInfo.mode = Ready;
       TWIInfo.errorCode = TWI_STATUS;
       TWISendStop();
+      nextPollingData();
     }
     break;
   case TWI_REP_START_SENT: // Repeated start has been transmitted
@@ -504,9 +407,9 @@ void I2Cdev::interrupt() {
   // TODO  IMPLEMENT SLAVE TRANSMITTER FUNCTIONALITY
 
   // ----\/ ---- MISCELLANEOUS STATES ----\/ ----  //
-  case TWI_NO_RELEVANT_INFO: // It is not really possible to get into this ISR
-                             // on this condition Rather, it is there to be
-                             // manually set between operations
+  case TWI_NO_RELEVANT_INFO: // It is not really possible to get into this
+                             // ISR on this condition Rather, it is there to
+                             // be manually set between operations
     break;
   case TWI_ILLEGAL_START_STOP: // Illegal START/STOP, abort and return error
     TWIInfo.errorCode = TWI_ILLEGAL_START_STOP;

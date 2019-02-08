@@ -59,34 +59,34 @@ namespace NintendoExtensionCtrl {
 		uint8_t joyX() const;  // 6 bits, 0-63
 		uint8_t joyY() const;
 
-		boolean strum() const;
-		boolean strumUp() const;
-		boolean strumDown() const;
+		bool strum() const;
+		bool strumUp() const;
+		bool strumDown() const;
 
-		boolean fretGreen() const;
-		boolean fretRed() const;
-		boolean fretYellow() const;
-		boolean fretBlue() const;
-		boolean fretOrange() const;
+		bool fretGreen() const;
+		bool fretRed() const;
+		bool fretYellow() const;
+		bool fretBlue() const;
+		bool fretOrange() const;
 
 		uint8_t whammyBar() const;  // 5 bits, 0-31 (starting at ~15-16)
 
 		uint8_t touchbar() const;  // 5 bits, 0-31
-		boolean touchGreen() const;
-		boolean touchRed() const;
-		boolean touchYellow() const;
-		boolean touchBlue() const;
-		boolean touchOrange() const;
+		bool touchGreen() const;
+		bool touchRed() const;
+		bool touchYellow() const;
+		bool touchBlue() const;
+		bool touchOrange() const;
 
-		boolean buttonPlus() const;
-		boolean buttonMinus() const;
+		bool buttonPlus() const;
+		bool buttonMinus() const;
 
 		void printDebug();
 
-		boolean supportsTouchbar();
+		bool supportsTouchbar();
 
 	private:
-		boolean touchbarData = false;  // Flag for touchbar data found
+		bool touchbarData = false;  // Flag for touchbar data found
 	};
 }
 

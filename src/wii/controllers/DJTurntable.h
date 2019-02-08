@@ -70,20 +70,20 @@ namespace NintendoExtensionCtrl {
 
 		int8_t turntable() const;  // 6 bits, -30-29. Clockwise = positive, faster = larger.
 
-		boolean buttonGreen() const;
-		boolean buttonRed() const;
-		boolean buttonBlue() const;
+		bool buttonGreen() const;
+		bool buttonRed() const;
+		bool buttonBlue() const;
 
 		uint8_t effectDial() const;  // 5 bits, 0-31. One rotation per rollover.
 		int8_t crossfadeSlider() const;  // 4 bits, -8-7. Negative to the left.
 
-		boolean buttonEuphoria() const;
+		bool buttonEuphoria() const;
 
 		uint8_t joyX() const;  // 6 bits, 0-63
 		uint8_t joyY() const;
 
-		boolean buttonPlus() const;
-		boolean buttonMinus() const;
+		bool buttonPlus() const;
+		bool buttonMinus() const;
 
 		void printDebug();
 
@@ -94,17 +94,17 @@ namespace NintendoExtensionCtrl {
 		public:
 			TurntableExpansion(TurntableConfig conf, DJTurntableController_Shared &baseObj)
 				: side(conf), base(baseObj) {}
-			boolean connected() const;
+			bool connected() const;
 
 			virtual int8_t turntable() const = 0;
 
-			virtual boolean buttonGreen() const = 0;
-			virtual boolean buttonRed() const = 0;
-			virtual boolean buttonBlue() const = 0;
+			virtual bool buttonGreen() const = 0;
+			virtual bool buttonRed() const = 0;
+			virtual bool buttonBlue() const = 0;
 
 			const TurntableConfig side = TurntableConfig::BaseOnly;
 		protected:
-			int8_t getTurntableSpeed(uint8_t turnData, boolean turnSign) const {
+			int8_t getTurntableSpeed(uint8_t turnData, bool turnSign) const {
 				if (turnSign) {  // If sign bit is 1...
 					turnData |= 0xE0;  // Flip all sign-related bits to '1's
 				}
@@ -120,9 +120,9 @@ namespace NintendoExtensionCtrl {
 				: TurntableExpansion(TurntableConfig::Left, baseObj) {}
 			int8_t turntable() const;
 
-			boolean buttonGreen() const;
-			boolean buttonRed() const;
-			boolean buttonBlue()  const;
+			bool buttonGreen() const;
+			bool buttonRed() const;
+			bool buttonBlue()  const;
 		} left;
 
 		class TurntableRight : public TurntableExpansion {
@@ -131,9 +131,9 @@ namespace NintendoExtensionCtrl {
 				: TurntableExpansion(TurntableConfig::Right, baseObj) {}
 			int8_t turntable() const;
 
-			boolean buttonGreen() const;
-			boolean buttonRed() const;
-			boolean buttonBlue() const;
+			bool buttonGreen() const;
+			bool buttonRed() const;
+			bool buttonBlue() const;
 		} right;
 
 		class EffectRollover : private NintendoExtensionCtrl::RolloverChange {

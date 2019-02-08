@@ -52,15 +52,15 @@ int8_t DJTurntableController_Shared::turntable() const {
 	return left.turntable() + right.turntable();
 }
 
-boolean DJTurntableController_Shared::buttonGreen() const {
+bool DJTurntableController_Shared::buttonGreen() const {
 	return left.buttonGreen() | right.buttonGreen();
 }
 
-boolean DJTurntableController_Shared::buttonRed() const {
+bool DJTurntableController_Shared::buttonRed() const {
 	return left.buttonRed() | right.buttonRed();
 }
 
-boolean DJTurntableController_Shared::buttonBlue() const {
+bool DJTurntableController_Shared::buttonBlue() const {
 	return left.buttonBlue() | right.buttonBlue();
 }
 
@@ -73,7 +73,7 @@ int8_t DJTurntableController_Shared::crossfadeSlider() const {
 	return getControlData(Maps::CrossfadeSlider) - 8;  // Shifted to signed int
 }
 
-boolean DJTurntableController_Shared::buttonEuphoria() const {
+bool DJTurntableController_Shared::buttonEuphoria() const {
 	return getControlBit(Maps::ButtonEuphoria);
 }
 
@@ -85,11 +85,11 @@ uint8_t DJTurntableController_Shared::joyY() const {
 	return getControlData(Maps::JoyY);
 }
 
-boolean DJTurntableController_Shared::buttonPlus() const {
+bool DJTurntableController_Shared::buttonPlus() const {
 	return getControlBit(Maps::ButtonPlus);
 }
 
-boolean DJTurntableController_Shared::buttonMinus() const {
+bool DJTurntableController_Shared::buttonMinus() const {
 	return getControlBit(Maps::ButtonMinus);
 }
 
@@ -98,8 +98,8 @@ DJTurntableController_Shared::TurntableConfig DJTurntableController_Shared::getT
 		return tableConfig;  // Both are attached, no reason to check data
 	}
 
-	boolean leftState = left.connected();
-	boolean rightState = right.connected();
+	bool leftState = left.connected();
+	bool rightState = right.connected();
 
 	if (leftState && rightState) {
 		return tableConfig = TurntableConfig::Both;
@@ -135,7 +135,7 @@ uint8_t DJTurntableController_Shared::getNumTurntables() {
 
 
 // Turntable Expansion Base
-boolean DJTurntableController_Shared::TurntableExpansion::connected() const {
+bool DJTurntableController_Shared::TurntableExpansion::connected() const {
 	if (base.tableConfig == TurntableConfig::Both || base.tableConfig == side) {
 		return true;  // Already checked
 	}
@@ -145,38 +145,38 @@ boolean DJTurntableController_Shared::TurntableExpansion::connected() const {
 // Left Turntable
 int8_t DJTurntableController_Shared::TurntableLeft::turntable() const {
 	uint8_t turnData = base.getControlData(Maps::Left_Turntable);
-	boolean turnSign = base.getControlData(Maps::Left_TurntableSign);
+	bool turnSign = base.getControlData(Maps::Left_TurntableSign);
 	return getTurntableSpeed(turnData, turnSign);
 }
 
-boolean DJTurntableController_Shared::TurntableLeft::buttonGreen() const {
+bool DJTurntableController_Shared::TurntableLeft::buttonGreen() const {
 	return base.getControlBit(Maps::Left_ButtonGreen);
 }
 
-boolean DJTurntableController_Shared::TurntableLeft::buttonRed() const {
+bool DJTurntableController_Shared::TurntableLeft::buttonRed() const {
 	return base.getControlBit(Maps::Left_ButtonRed);
 }
 
-boolean DJTurntableController_Shared::TurntableLeft::buttonBlue() const {
+bool DJTurntableController_Shared::TurntableLeft::buttonBlue() const {
 	return base.getControlBit(Maps::Left_ButtonBlue);
 }
 
 // Right Turntable
 int8_t DJTurntableController_Shared::TurntableRight::turntable() const {
 	uint8_t turnData = base.getControlData(Maps::Right_Turntable);
-	boolean turnSign = base.getControlData(Maps::Right_TurntableSign);
+	bool turnSign = base.getControlData(Maps::Right_TurntableSign);
 	return getTurntableSpeed(turnData, turnSign);
 }
 
-boolean DJTurntableController_Shared::TurntableRight::buttonGreen() const {
+bool DJTurntableController_Shared::TurntableRight::buttonGreen() const {
 	return base.getControlBit(Maps::Right_ButtonGreen);
 }
 
-boolean DJTurntableController_Shared::TurntableRight::buttonRed() const {
+bool DJTurntableController_Shared::TurntableRight::buttonRed() const {
 	return base.getControlBit(Maps::Right_ButtonRed);
 }
 
-boolean DJTurntableController_Shared::TurntableRight::buttonBlue() const {
+bool DJTurntableController_Shared::TurntableRight::buttonBlue() const {
 	return base.getControlBit(Maps::Right_ButtonBlue);
 }
 

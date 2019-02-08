@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "wiiextension.h": "c",
-        "controller.h": "c"
+        "controller.h": "c",
+        "inv_mpu.h": "c"
     }
 }
